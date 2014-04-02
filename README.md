@@ -20,14 +20,14 @@ The toolbox is written as a Python plugin for GIMP. Its interface is built using
 * [SciPy](http://www.scipy.org/) for [MATLAB `.mat` file I/O](http://docs.scipy.org/doc/scipy/reference/tutorial/io.html) (required)
 * [Scikit-Image](http://scikit-image.org/) for [SLIC segmentation algorithm](http://scikit-image.org/docs/dev/api/skimage.segmentation.html?highlight=slic#skimage.segmentation.slic) (optional)
 
-### Ubuntu
-
 Installation of NumPy and SciPy can be taken care of easy on Ubuntu using the following:
 
 ```
 sudo apt-get install python-pip python-setuptools python-numpy python-scipy
 sudo pip install numpy scipy
 ```
+
+For Mac OS X and Windows consider using [the binary package installers provided by the maintainers](http://www.scipy.org/install.html#individual-binary-and-source-packages).
 
 ## Cross Platform
 
