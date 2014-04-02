@@ -31,6 +31,7 @@ except ImportError:
 # for debugging
 #sys.stderr = open('/home/vnguyen/.widget-toolbox-err.log', 'w', buffering=0)
 #sys.stdout = open('/home/vnguyen/.widget-toolbox-log.log', 'w', buffering=0)
+#sys.stdout.write(sys.executable);
 
 def make_colormap(n):
   i = np.arange(n)
@@ -572,15 +573,15 @@ class LabelToolbox(gtk.Window):
   #### METHODS ####
 
   def alertDialog(self, message):
-      alert = gtk.MessageDialog(self, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE, message)
-      alert.run()
-      alert.destroy()
+    alert = gtk.MessageDialog(self, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE, message)
+    alert.run()
+    alert.destroy()
 
   def updateImagePaths(self, image_full_path):
-      self.image_full_path = image_full_path
-      self.working_path, self.image_filename = os.path.split(self.image_full_path)
-      self.image_name, self.image_extension = os.path.splitext(self.image_filename)
-      self.image_name_box.set_text(self.image_filename)
+    self.image_full_path = image_full_path
+    self.working_path, self.image_filename = os.path.split(self.image_full_path)
+    self.image_name, self.image_extension = os.path.splitext(self.image_filename)
+    self.image_name_box.set_text(self.image_filename)
 
   def loadMetaData(self):
     label_map_filename = os.path.join(self.working_path, 'label-mat', 'map.txt')
@@ -659,7 +660,7 @@ class LabelToolbox(gtk.Window):
     # get paths
     mat_filename = os.path.join(self.working_path, 'label-mat', self.image_name+'.mat')
     gimp.progress_init('Saving labels as "{:}"...'.format(mat_filename))
-    self.pullInternalRgbLabeImageFromLayer()
+    self.pullInternalRgbLabelImageFromLayer()
     gimp.progress_update(20)
     self.updateInternalIntLabelImage()
     gimp.progress_update(50)
@@ -704,6 +705,7 @@ class LabelToolbox(gtk.Window):
 
   def saveLabelPng(self):
     label_filename = os.path.join(self.working_path, 'label-img', self.image_name+'.png')
+    # TODO: Label these arguments.
     pdb.file_png_save(self.image,
                       self.label_layer,
                       label_filename,
@@ -741,7 +743,7 @@ class LabelToolbox(gtk.Window):
     self.label_layer.flush()
     pdb.gimp_displays_flush()
 
-  def pullInternalRgbLabeImageFromLayer(self):
+  def pullInternalRgbLabelImageFromLayer(self):
     pdb.gimp_selection_none(self.image)
     pixel_region = self.label_layer.get_pixel_rgn(0, 0,
                                                   self.image.width, self.image.height,
@@ -766,12 +768,12 @@ class LabelToolbox(gtk.Window):
       gimp.set_foreground(tuple(map(lambda x: int(x), color)))
 
   def loadComment(self):
-      comment_filename = os.path.join(self.working_path, 'comment-txt', self.image_name+'.txt')
-      try:
-        with open(comment_filename, 'r') as f:
-          self.comment.set_text(f.read())
-      except IOError:
-        pass
+    comment_filename = os.path.join(self.working_path, 'comment-txt', self.image_name+'.txt')
+    try:
+      with open(comment_filename, 'r') as f:
+        self.comment.set_text(f.read())
+    except IOError:
+      pass
   
   def resetInterface(self):
     if self.is_image_open:
@@ -846,7 +848,7 @@ class LabelToolbox(gtk.Window):
     pass
 
   def shuffleColorsButtonClicked(self, widget):
-    self.pullInternalRgbLabeImageFromLayer()
+    self.pullInternalRgbLabelImageFromLayer()
     self.updateInternalIntLabelImage()
     self.shuffle()
     self.updateInternalRgbLabelImage()
