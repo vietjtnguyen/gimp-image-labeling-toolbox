@@ -20,6 +20,15 @@ The toolbox is written as a Python plugin for GIMP. Its interface is built using
 * [SciPy](http://www.scipy.org/) for [MATLAB `.mat` file I/O](http://docs.scipy.org/doc/scipy/reference/tutorial/io.html) (required)
 * [Scikit-Image](http://scikit-image.org/) for [SLIC segmentation algorithm](http://scikit-image.org/docs/dev/api/skimage.segmentation.html?highlight=slic#skimage.segmentation.slic) (optional)
 
+### Ubuntu
+
+Installation of NumPy and SciPy can be taken care of easy on Ubuntu using the following:
+
+```
+sudo apt-get install python-pip python-setuptools python-numpy python-scipy
+sudo pip install numpy scipy
+```
+
 ## Cross Platform
 
 The plugin was developed and tested on Ubuntu 13.10 with GIMP 2.8. On this system installation is just a matter of creating a symlink to or copying `label-toolbox.py` to `$HOME/.gimp-2.8/plug-ins`.
