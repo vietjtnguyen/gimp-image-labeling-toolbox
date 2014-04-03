@@ -29,8 +29,8 @@ except ImportError:
   slic_available = False
 
 # for debugging
-#sys.stderr = open('/home/vnguyen/.widget-toolbox-err.log', 'w', buffering=0)
-#sys.stdout = open('/home/vnguyen/.widget-toolbox-log.log', 'w', buffering=0)
+#sys.stderr = open('/home/vnguyen/gimp-label-toolbox-err.log', 'w', buffering=0)
+#sys.stdout = open('/home/vnguyen/gimp-label-toolbox-out.log', 'w', buffering=0)
 #sys.stdout.write(sys.executable);
 
 def make_colormap(n):
@@ -650,9 +650,9 @@ class LabelToolbox(gtk.Window):
       self.is_image_open = False
       self.resetInterface()
     else:
-      self.int_label_image = loadmat(mat_filename)['LabelMap']
-      self.updateInternalRgbLabelImage()
-      self.pushInternalRgbLabelImageToLayer()
+      int_label_image = loadmat(mat_filename)['LabelMap']
+      rgb_label_image = self.intLabelImageToRgbLabelImage(int_label_image)
+      self.rgbLabelImageToLayer(rgb_label_image, self.label_layer)
       # update gimp
       pdb.gimp_displays_flush()
 
@@ -660,11 +660,11 @@ class LabelToolbox(gtk.Window):
     # get paths
     mat_filename = os.path.join(self.working_path, 'label-mat', self.image_name+'.mat')
     gimp.progress_init('Saving labels as "{0}"...'.format(mat_filename))
-    self.pullInternalRgbLabelImageFromLayer()
+    rgb_label_image = self.layerToRgbLabelImage(self.label_layer)
     gimp.progress_update(20)
-    self.updateInternalIntLabelImage()
+    int_label_image = self.rgbLabelImageToIntLabelImage(rgb_label_image)
     gimp.progress_update(50)
-    savemat(mat_filename, {'LabelMap': self.int_label_image}, do_compression=True)
+    savemat(mat_filename, {'LabelMap': int_label_image}, do_compression=True)
     gimp.progress_update(100)
     pdb.gimp_progress_set_text('Saved labels as "{0}"!'.format(mat_filename))
     pdb.gimp_progress_end()
@@ -718,34 +718,36 @@ class LabelToolbox(gtk.Window):
                       False,
                       True)
 
-  def updateInternalRgbLabelImage(self):
-    self.rgb_label_image = self.colormap[self.shufflemap[self.int_label_image]]
+  def intLabelImageToRgbLabelImage(self, int_label_image):
+    return self.colormap[self.shufflemap[int_label_image]]
 
-  def updateInternalIntLabelImage(self):
+  def rgbLabelImageToIntLabelImage(self, rgb_label_image):
+    int_label_image = np.zeros((rgb_label_image.shape[0], rgb_label_image.shape[1]), dtype='uint16')
     try:
-      for i in range(self.int_label_image.shape[0]):
-        for j in range(self.int_label_image.shape[1]):
-          self.int_label_image[i, j] = self.reversemap[tuple(self.rgb_label_image[i, j])]
+      for i in range(int_label_image.shape[0]):
+        for j in range(int_label_image.shape[1]):
+          int_label_image[i, j] = self.reversemap[tuple(rgb_label_image[i, j])]
+      return int_label_image
     except KeyError:
-      self.alertDialog('An unknown color was found in the label image. This most likely occured because some operation were performed with anti-aliasing. Could not proceed with operation.')
+      self.alertDialog('An unknown color was found in the label image. This most likely occured because some operation were performed with anti-aliasing or the foreground color was not updated after a shuffle. Could not proceed with conversion of RGB label image to integer label image.')
 
-  def pushInternalRgbLabelImageToLayer(self):
+  def rgbLabelImageToLayer(self, rgb_label_image, label_layer):
     pdb.gimp_selection_none(self.image)
-    pixel_region = self.label_layer.get_pixel_rgn(0, 0,
+    pixel_region = label_layer.get_pixel_rgn(0, 0,
                                                   self.image.width, self.image.height,
                                                   True, True)
-    rgba_label_image = np.dstack((self.rgb_label_image,
+    rgba_label_image = np.dstack((rgb_label_image,
                                   np.ones((self.image.height, self.image.width),
                                           dtype='uint8') * 255))
     pixel_region[0:self.image.width, 0:self.image.height] = array.array('B', rgba_label_image.ravel()).tostring()
-    self.label_layer.merge_shadow(True)
-    self.label_layer.update(0, 0, self.image.width, self.image.height)
-    self.label_layer.flush()
+    label_layer.merge_shadow(True)
+    label_layer.update(0, 0, self.image.width, self.image.height)
+    label_layer.flush()
     pdb.gimp_displays_flush()
 
-  def pullInternalRgbLabelImageFromLayer(self):
+  def layerToRgbLabelImage(self, label_layer):
     pdb.gimp_selection_none(self.image)
-    pixel_region = self.label_layer.get_pixel_rgn(0, 0,
+    pixel_region = label_layer.get_pixel_rgn(0, 0,
                                                   self.image.width, self.image.height,
                                                   False, False)
     byte_array = array.array('B', pixel_region[0:self.image.width, 0:self.image.height])
@@ -753,7 +755,7 @@ class LabelToolbox(gtk.Window):
     byte_array = byte_array.reshape(len(byte_array)/4, 4)
     # NOTE THE SWITCH IN INDEX ORDER
     rgba_label_image = byte_array.reshape(self.image.height, self.image.width, 4)
-    self.rgb_label_image = rgba_label_image[:, :, :3]
+    return rgba_label_image[:, :, :3]
 
   def shuffle(self):
     np.random.shuffle(self.shufflemap)
@@ -848,11 +850,11 @@ class LabelToolbox(gtk.Window):
     pass
 
   def shuffleColorsButtonClicked(self, widget):
-    self.pullInternalRgbLabelImageFromLayer()
-    self.updateInternalIntLabelImage()
+    rgb_label_image = self.layerToRgbLabelImage(self.label_layer)
+    int_label_image = self.rgbLabelImageToIntLabelImage(rgb_label_image)
     self.shuffle()
-    self.updateInternalRgbLabelImage()
-    self.pushInternalRgbLabelImageToLayer()
+    rgb_label_image = self.intLabelImageToRgbLabelImage(int_label_image)
+    self.rgbLabelImageToLayer(rgb_label_image, self.label_layer)
 
   def labelOpacitySliderChange(self, widget, scroll, value):
     self.label_layer.opacity = min(100.0, max(0.0, value))
