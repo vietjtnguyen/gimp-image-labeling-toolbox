@@ -44,6 +44,10 @@ When the toolbox opens an image, say at `/path/to/my-image.jpg`, it does four th
 3. Loads the label `.mat` file (see `loadLabelMat`). The toolbox looks for this at `/path/to/label-mat/my-image.mat`.
 4. Loads the comment associated with the image (see `loadComment`). The toolbox finds this file at `/path/to/comment-txt/my-image.txt`.
 
+The `/label-mat` folder contains the `.mat` array files that store the labels themselves. The `/comment-txt` folder contains text files (simple UTF-8 text files) that have the per-image comments. A text file per-image is *optional*; the folder could be empty to begin with.
+
+The `/label-img` folder has no functional purpose. If one saves the label image using the `Save PNG Label` button then the `.png` file will end up there. Note that these label *images* cannot be read from because the color map used to generate them is *not* saved with the image file. This is not a problem for `.mat` files because those contain the actual integer labels and thus do not need translation (until they are loaded again into a label image).
+
 ### Example
 
 ```
