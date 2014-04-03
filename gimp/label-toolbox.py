@@ -54,7 +54,7 @@ def make_colormap(n):
   rgb = np.array(rgbf * 255, dtype='uint32')
   # verify that the mapping is unique
   if not len(np.unique(rgb[:, 0] * 256 * 256 + rgb[:, 1] * 256 + rgb[:, 2])) == n:
-    gimp.message('Cannot produce a unique color map for {:} values!'.format(n))
+    gimp.message('Cannot produce a unique color map for {0} values!'.format(n))
   return np.array(rgb, dtype='uint8')
 
 class LabelToolbox(gtk.Window):
@@ -603,7 +603,7 @@ class LabelToolbox(gtk.Window):
     try:
       original_image = pdb.gimp_file_load(original_filename, original_filename)
     except:
-      self.alertDialog('Could not load file "{:}".'.format(original_filename))
+      self.alertDialog('Could not load file "{0}".'.format(original_filename))
       self.is_image_open = False
       self.resetInterface()
       return
@@ -646,7 +646,7 @@ class LabelToolbox(gtk.Window):
     try:
       mat_filename = os.path.join(self.working_path, 'label-mat', self.image_name+'.mat')
     except:
-      self.alertDialog('Could not load file "{:}".'.format(mat_filename))
+      self.alertDialog('Could not load file "{0}".'.format(mat_filename))
       self.is_image_open = False
       self.resetInterface()
     else:
@@ -659,14 +659,14 @@ class LabelToolbox(gtk.Window):
   def saveLabelMat(self):
     # get paths
     mat_filename = os.path.join(self.working_path, 'label-mat', self.image_name+'.mat')
-    gimp.progress_init('Saving labels as "{:}"...'.format(mat_filename))
+    gimp.progress_init('Saving labels as "{0}"...'.format(mat_filename))
     self.pullInternalRgbLabelImageFromLayer()
     gimp.progress_update(20)
     self.updateInternalIntLabelImage()
     gimp.progress_update(50)
     savemat(mat_filename, {'LabelMap': self.int_label_image}, do_compression=True)
     gimp.progress_update(100)
-    pdb.gimp_progress_set_text('Saved labels as "{:}"!'.format(mat_filename))
+    pdb.gimp_progress_set_text('Saved labels as "{0}"!'.format(mat_filename))
     pdb.gimp_progress_end()
 
   def loadLabelPng(self):
@@ -679,7 +679,7 @@ class LabelToolbox(gtk.Window):
     try:
       label_image = pdb.gimp_file_load(label_filename, label_filename)
     except:
-      self.alertDialog('Could not load file "{:}".'.format(label_filename))
+      self.alertDialog('Could not load file "{0}".'.format(label_filename))
       self.is_image_open = False
       self.resetInterface()
     else:
@@ -796,7 +796,7 @@ class LabelToolbox(gtk.Window):
           foreground_name = self.label_int_to_name_map[self.reversemap[foreground_color]]
           self.current_label.set_text(foreground_name)
         else:
-          self.current_label.set_text('{:} not found'.format(str(foreground_color)))
+          self.current_label.set_text('{0} not found'.format(str(foreground_color)))
     else:
       for widget in self.only_available_with_open_image:
         widget.set_sensitive(False)
