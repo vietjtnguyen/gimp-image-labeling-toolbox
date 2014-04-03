@@ -367,7 +367,7 @@ class LabelToolbox(gtk.Window):
 
     widget = gtk.Expander('Super Pixel Helper')
     widget.show()
-    widget.set_expanded(True)
+    widget.set_expanded(slic_available)
     widget.set_resize_mode(gtk.RESIZE_PARENT)
     container[-1].add(widget)
     container.append(widget)
