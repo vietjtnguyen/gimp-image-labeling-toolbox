@@ -486,7 +486,26 @@ class LabelToolbox(gtk.Window):
     self.only_available_with_open_image.append(widget)
     self.selection_interface.append(widget)
 
-    widget = self.clear_selection_button = gtk.Button('Clear')
+    widget = self.label_delete_button = gtk.Button('Delete Label')
+    widget.show()
+    widget.connect('clicked', self.labelDeleteButtonClicked)
+    container[-1].add(widget)
+    self.only_available_with_open_image.append(widget)
+    self.selection_interface.append(widget)
+
+    container.pop()
+
+    widget = gtk.HBox(spacing=4, homogeneous=True)
+    widget.show()
+    container[-1].add(widget)
+    container.append(widget)
+
+    widget = self.layer_alpha_selection_button = gtk.Button('Select Mask')
+    widget.show()
+    widget.connect('clicked', self.layerAlphaSelectionButtonClicked)
+    container[-1].add(widget)
+
+    widget = self.clear_selection_button = gtk.Button('Select None')
     widget.show()
     widget.connect('clicked', self.clearSelectionButtonClicked)
     container[-1].add(widget)
@@ -1315,6 +1334,20 @@ class LabelToolbox(gtk.Window):
     pdb.gimp_selection_sharpen(self.image)
     pdb.gimp_edit_fill(layer, gimpenums.FOREGROUND_FILL)
     layer.flush()
+    pdb.gimp_displays_flush()
+
+  def labelDeleteButtonClicked(self, widget):
+    logging.info('Button clicked')
+    layer = pdb.gimp_image_get_active_layer(self.image)
+    pdb.gimp_selection_sharpen(self.image)
+    pdb.gimp_edit_clear(layer)
+    layer.flush()
+    pdb.gimp_displays_flush()
+
+  def layerAlphaSelectionButtonClicked(self, widget):
+    logging.info('Button clicked')
+    CHANNEL_OP_REPLACE = 2
+    pdb.gimp_image_select_item(self.image, CHANNEL_OP_REPLACE, pdb.gimp_image_get_active_layer(self.image))
     pdb.gimp_displays_flush()
 
   def clearSelectionButtonClicked(self, widget):
