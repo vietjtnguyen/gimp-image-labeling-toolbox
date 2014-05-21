@@ -1,4 +1,5 @@
-# GIMP Image Labeling Toolbox
+GIMP Image Labeling Toolbox
+===========================
 
 Image labeling is a common task in computer vision where humans are used to generate a ground truth data set to act both as training data for computer vision algorithms and testing benchmarks for methods that perform semantic segmentation algorithms. The label here is an assignment of a value (or possibly multiple values) to each pixel in the image. These values are usually integers which map to semantic categories such as "train" and "person". Since labels are assigned to each pixel the task is inherently a *painting* task. It then makes sense to use a painting program to perform hand labeling. This toolbox seeks to facilitate this by working with [the GNU Image Manipulation Program (GIMP)](http://www.gimp.org/) thus providing access to the following features and more:
 
@@ -14,7 +15,8 @@ Image labeling is a common task in computer vision where humans are used to gene
 
 The toolbox is written as a Python plugin for GIMP. Its interface is built using [PyGTK](http://www.pygtk.org/) which is a Python wrapper for the [Gnome Toolkit (GTK)](http://www.gtk.org/). It currently exists as a [single Python script](https://github.com/vietjtnguyen/gimp-image-labeling-toolbox/blob/master/gimp/label-toolbox.py).
 
-## Dependencies
+Dependencies
+------------
 
 * [NumPy](http://www.numpy.org/) for array manipulation (required)
 * [SciPy](http://www.scipy.org/) for [MATLAB `.mat` file I/O](http://docs.scipy.org/doc/scipy/reference/tutorial/io.html) (required)
@@ -29,13 +31,17 @@ sudo pip install numpy scipy
 
 For Mac OS X and Windows consider using [the binary package installers provided by the maintainers](http://www.scipy.org/install.html#individual-binary-and-source-packages).
 
-## Installation
+Also uses `appdirs`, specifically the file https://raw.githubusercontent.com/ActiveState/appdirs/2727a1b0444405a8728052512f02f26884528d64/appdirs.py included directly. Thus I need to honor the [MIT License](https://github.com/ActiveState/appdirs/blob/master/LICENSE.txt) appropriately.
+
+Installation
+------------
 
 Assuming GIMP 2.8 is installed, installation of the toolbox on Ubuntu is just a matter of creating a symlink to or copying `label-toolbox.py` to `$HOME/.gimp-2.8/plug-ins`.
 
 Assuming the required dependencies of NumPy and SciPy are taken care of the plugin should theoretically work on both Mac OS X and Windows since GIMP and Python plugins for GIMP are supported on both of those platforms. ***This cross platform capability has not been tested yet and will likely require some finesse and further development***. For generic GIMP plugin installation instructions for other platforms see [here](http://en.wikibooks.org/wiki/GIMP/Installing_Plugins#Copying_the_plugin_to_the_GIMP_plugin_directory).
 
-## Directory Structure
+Directory Structure
+-------------------
 
 When the toolbox opens an image, say at `/path/to/my-image.jpg`, it does four things (see `openImageButtonClicked`):
 
@@ -57,7 +63,8 @@ The `/label-img` folder has no functional purpose. If one saves the label image 
 /path/to/label-mat/map.txt
 ```
 
-## Workflow
+Workflow
+--------
 
 1. Open GIMP
 2. Create a new blank image
@@ -67,7 +74,8 @@ The `/label-img` folder has no functional purpose. If one saves the label image 
 6. Save label using toolbox's `Save MAT Label` button
 7. Repeat step 4 for more images
 
-## Usage
+Usage
+-----
 
 The open/save state of an image when using the toolbox exists *independently* of GIMP's open/save states. When using the toolbox use only the `Open Image` and `Save MAT Label` buttons on the toolbox.
 
@@ -87,11 +95,13 @@ The toolbox window will automatically float on top of the GIMP window ***but wil
 * I would have put buttons on the toolbox for the common tools but the GIMP plugin API does not provide functionality for selecting tools.
 * The comment text field is *saved on the fly*. Each edit updates the text file ***immediately***.
 
-## Screenshots
+Screenshots
+-----------
 
 ![Fully expanded toolbox](https://raw.githubusercontent.com/vietjtnguyen/gimp-image-labeling-toolbox/master/docs/expanded-toolbox.png)
 
-## TODO
+TODO
+----
 
 * Cross-platform testing
 * Support multiple layers of labels
