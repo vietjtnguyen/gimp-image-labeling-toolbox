@@ -181,6 +181,8 @@ class LabelToolbox(gtk.Window):
     self.is_image_open = False
     self.image_full_path = ''
     self.working_path = ''
+    self.image_list = []
+    self.image_index = 0
     self.image_filename = ''
     self.image_name = ''
     self.image_extension = ''
@@ -245,6 +247,25 @@ class LabelToolbox(gtk.Window):
     widget = self.save_label_mat_button = gtk.Button('Save MAT Label')
     widget.show()
     widget.connect('clicked', self.saveLabelMatButtonClicked)
+    container[-1].add(widget)
+    self.only_available_with_open_image.append(widget)
+
+    container.pop()
+
+    widget = gtk.HBox(spacing=4, homogeneous=True)
+    widget.show()
+    container[-1].add(widget)
+    container.append(widget)
+
+    widget = self.previous_image_button = gtk.Button('Previous')
+    widget.show()
+    widget.connect('clicked', self.previousImageButtonClicked)
+    container[-1].add(widget)
+    self.only_available_with_open_image.append(widget)
+
+    widget = self.next_image_button = gtk.Button('Next')
+    widget.show()
+    widget.connect('clicked', self.nextImageButtonClicked)
     container[-1].add(widget)
     self.only_available_with_open_image.append(widget)
 
@@ -790,6 +811,15 @@ class LabelToolbox(gtk.Window):
     self.working_path, self.image_filename = os.path.split(self.image_full_path)
     self.image_name, self.image_extension = os.path.splitext(self.image_filename)
     self.image_name_box.set_text(self.image_filename)
+    self.image_list = filter(lambda x: x.endswith('.jpg'), os.listdir(self.working_path))
+    self.image_index = self.image_list.index(self.image_filename)
+
+  def jumpImage(self, offset):
+    self.image_index = ( self.image_index + offset + len(self.image_list)) % len(self.image_list)
+    self.image_filename = self.image_list[self.image_index]
+    self.image_full_path = os.path.join(self.working_path, self.image_filename)
+    self.image_name, self.image_extension = os.path.splitext(self.image_filename)
+    self.image_name_box.set_text(self.image_filename)
 
   def loadMetaData(self):
     label_map_filename = os.path.join(self.working_path, self.map_relative_path, 'map.txt')
@@ -1224,6 +1254,26 @@ class LabelToolbox(gtk.Window):
   def saveLabelMatButtonClicked(self, widget):
     logging.info('Button clicked')
     self.saveLabelMat()
+
+  def previousImageButtonClicked(self, widget):
+    logging.info('Button clicked')
+    self.jumpImage(-1)
+    self.loadMetaData()
+    self.loadImage()
+    self.loadLabelMat()
+    self.loadComment()
+    self.updateLayerList()
+    self.selectLabelLayers()
+
+  def nextImageButtonClicked(self, widget):
+    logging.info('Button clicked')
+    self.jumpImage(+1)
+    self.loadMetaData()
+    self.loadImage()
+    self.loadLabelMat()
+    self.loadComment()
+    self.updateLayerList()
+    self.selectLabelLayers()
 
   def completionMatchSelected(self, completion, model, iterator):
     logging.info('Label name completion selected')
