@@ -811,7 +811,7 @@ class LabelToolbox(gtk.Window):
     self.working_path, self.image_filename = os.path.split(self.image_full_path)
     self.image_name, self.image_extension = os.path.splitext(self.image_filename)
     self.image_name_box.set_text(self.image_filename)
-    self.image_list = filter(lambda x: x.endswith('.jpg'), os.listdir(self.working_path))
+    self.image_list = sorted(filter(lambda x: x.endswith('.jpg'), os.listdir(self.working_path)))
     self.image_index = self.image_list.index(self.image_filename)
 
   def jumpImage(self, offset):
