@@ -36,7 +36,7 @@ Also uses `appdirs`, specifically the file https://raw.githubusercontent.com/Act
 Installation
 ------------
 
-Assuming GIMP 2.8 is installed, installation of the toolbox on Ubuntu is just a matter of creating a symlink to or copying `label-toolbox.py` to `$HOME/.gimp-2.8/plug-ins`.
+Assuming GIMP 2.8 is installed, installation of the toolbox on Ubuntu is just a matter of creating a symlink to or copying `label-toolbox.py` to `$HOME/.gimp-2.8/plug-ins`. *On Linux and Mac OS X remember to give `label-toolbox.py` executable permissions (e.g. `chmod ugo+x label-toolbox.py`).*
 
 Assuming the required dependencies of NumPy and SciPy are taken care of the plugin should theoretically work on both Mac OS X and Windows since GIMP and Python plugins for GIMP are supported on both of those platforms. ***This cross platform capability has not been tested yet and will likely require some finesse and further development***. For generic GIMP plugin installation instructions for other platforms see [here](http://en.wikibooks.org/wiki/GIMP/Installing_Plugins#Copying_the_plugin_to_the_GIMP_plugin_directory).
 

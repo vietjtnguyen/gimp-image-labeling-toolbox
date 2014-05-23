@@ -22,6 +22,11 @@ import shutil
 import string
 import sys
 
+# Attempt to add default Python 2.7 install to allow GIMP's Python to find
+# dependencies
+if os.name == 'nt':
+  sys.path.append(r'C:\Python27\Lib\site-packages')
+
 # Try to import `appdirs` and set up the logging infrastructure. There *really*
 # should be no reason `appdirs` does not import properly because the file is
 # right there! However, just in case I'm going to assume Viet screwed up so
@@ -52,6 +57,8 @@ logging.basicConfig(filename=log_log_file,
                     format='%(asctime)s : %(filename)s:%(lineno)d : %(funcName)s : %(levelname)s : %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p')
 logging.info('Toolbox session started.')
+logging.info('Python executable: %s' % sys.executable)
+logging.info('Python paths: %s' % sys.path)
 
 # NumPy and SciPy are required dependencies. We'll try to import them here. If
 # we fail we'll set a flag that will trigger a message later and then close the
@@ -203,9 +210,10 @@ class LabelToolbox(gtk.Window):
     # TODO: Support multiple label layers
     # TODO: Change this according to number of labels
     self.num_of_labels = 1024 # TODO: needs to be number of labels + 1 so that zero is reserved for empty label
-    self.colormap = makeColormap(self.num_of_labels)
-    self.shufflemap = np.arange(self.num_of_labels)
-    self.shuffle()
+    if imports_succeeded:
+      self.colormap = makeColormap(self.num_of_labels)
+      self.shufflemap = np.arange(self.num_of_labels)
+      self.shuffle()
 
     self.label_int_to_name_map = {}
     self.label_name_to_int_map = {}
