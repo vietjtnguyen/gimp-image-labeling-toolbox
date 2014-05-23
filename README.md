@@ -22,7 +22,7 @@ Dependencies
 * [SciPy](http://www.scipy.org/) for [MATLAB `.mat` file I/O](http://docs.scipy.org/doc/scipy/reference/tutorial/io.html) (required)
 * [Scikit-Image](http://scikit-image.org/) for [SLIC segmentation algorithm](http://scikit-image.org/docs/dev/api/skimage.segmentation.html?highlight=slic#skimage.segmentation.slic) (optional)
 
-The plugin was developed and tested on Ubuntu 13.10 with GIMP 2.8. Installation of NumPy and SciPy can be taken care of easy on Ubuntu using the following:
+The plugin was developed and tested on Ubuntu 13.10 and 12.04 with GIMP 2.8. Installation of NumPy and SciPy can be taken care of easy on Ubuntu using the following:
 
 ```
 sudo apt-get install python-pip python-setuptools python-numpy python-scipy
@@ -36,31 +36,83 @@ Also uses `appdirs`, specifically the file https://raw.githubusercontent.com/Act
 Installation
 ------------
 
-Assuming GIMP 2.8 is installed, installation of the toolbox on Ubuntu is just a matter of creating a symlink to or copying `label-toolbox.py` to `$HOME/.gimp-2.8/plug-ins`. *On Linux and Mac OS X remember to give `label-toolbox.py` executable permissions (e.g. `chmod ugo+x label-toolbox.py`).*
+Assuming GIMP 2.8 is installed, installation of the toolbox on Ubuntu is just a matter of creating a symlink to or copying both `label-toolbox.py` and `appdirs.py` to `$HOME/.gimp-2.8/plug-ins`. *On Linux and Mac OS X remember to give `label-toolbox.py` executable permissions (e.g. `chmod ugo+x label-toolbox.py`).*
 
-Assuming the required dependencies of NumPy and SciPy are taken care of the plugin should theoretically work on both Mac OS X and Windows since GIMP and Python plugins for GIMP are supported on both of those platforms. ***This cross platform capability has not been tested yet and will likely require some finesse and further development***. For generic GIMP plugin installation instructions for other platforms see [here](http://en.wikibooks.org/wiki/GIMP/Installing_Plugins#Copying_the_plugin_to_the_GIMP_plugin_directory).
+### Ubuntu
+
+The following instructions are "from memory" and should work but have not been tested on a fresh machine.
+
+1. Python 2.7 should already be available.
+2. Install `pip` and `gcc`.
+    - `sudo apt-get install -y python-pip python-dev python-setuptools`
+    - `sudo apt-get install -y gcc g++ gfortran make`
+3. Install NumPy and SciPy.
+    - `sudo apt-get install -y cython python-numpy python-scipy`
+    - `sudo pip install --upgrade cython`
+    - `sudo pip install --upgrade numpy`
+    - `sudo pip install --upgrade scipy`
+4. *[OPTIONAL]* Install SciKit-Image.
+    - `sudo pip install scikit-image`
+5. Install plug-in.
+    - `sudo apt-get install -y wget`
+    - `wget -P $HOME/.gimp-2.8/plug-ins https://raw.githubusercontent.com/vietjtnguyen/gimp-image-labeling-toolbox/master/gimp/label-toolbox.py`
+    - `wget -P $HOME/.gimp-2.8/plug-ins https://raw.githubusercontent.com/vietjtnguyen/gimp-image-labeling-toolbox/master/gimp/appdirs.py`
+6. Close GIMP and reopen it.
+7. Create a new, blank image.
+8. Open the toolbox via the file menu `Toolbox > Labeling`.
+
+### Windows
+
+The following instructions worked in my testing for Windows 7 64-bit and Windows 8 64-bit.
+
+1. Install Python 2.7 **32-bit**.
+    - <https://www.python.org/download/releases/2.7.6>
+    - It is important that you install the 32-bit version (e.g. <https://www.python.org/ftp/python/2.7.6/python-2.7.6.msi>) because the Python that GIMP installs on its own is 32-bit.
+2. Install NumPy for Python 2.7 32-bit.
+    - <http://sourceforge.net/projects/numpy/files/NumPy/1.7.2/>
+    - <http://sourceforge.net/projects/numpy/files/NumPy/1.7.2/numpy-1.7.2-win32-superpack-python2.7.exe/download>
+3. Install SciPy for Python 2.7 32-bit.
+    - <http://sourceforge.net/projects/scipy/files/scipy/0.14.0/>
+    - <http://sourceforge.net/projects/scipy/files/scipy/0.14.0/scipy-0.14.0-win32-superpack-python2.7.exe/download>
+4. *[OPTIONAL]* Install SciKit-Image for Python 2.7 32-bit.
+    - <http://scikit-image.org/download>
+    - <http://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-image>
+5. Install GIMP 2.8.
+    - <http://www.gimp.org/downloads/>
+    - <http://download.gimp.org/pub/gimp/v2.8/windows/gimp-2.8.10-setup.exe>
+6. Run GIMP 2.8 so that it can initialize itself and the appropriate plug-in folder.
+7. Download the following source files to `C:\Users\<your user name>\.gimp-2.8\plug-ins\`.
+    - [label-toolbox.py](https://raw.githubusercontent.com/vietjtnguyen/gimp-image-labeling-toolbox/master/gimp/label-toolbox.py)
+    - [appdirs.py](https://raw.githubusercontent.com/vietjtnguyen/gimp-image-labeling-toolbox/master/gimp/appdirs.py)
+8. Close GIMP and reopen it.
+9. Create a new, blank image.
+10. Open the toolbox via the file menu `Toolbox > Labeling`.
+
+What's going on here is GIMP 2.8 installs *its own Python binary*. As a result any dependencies (e.g. NumPy, SciPy) you install on your machine are available to the Python 2.7 you install (`C:\Python27` by default) but not immediately available to GIMP and the Python plug-ins it runs. What we do here is install Python 2.7 as an install target for our dependencies. The toolbox will then update its `sys.path` to look for the dependencies in the normally installed Python 2.7 (see [commit `c910e15dbb`](https://github.com/vietjtnguyen/gimp-image-labeling-toolbox/blob/7f8e68ae67546b09e87f2ccfd988338b2dfd93f3/gimp/label-toolbox.py#L27)). Since we match the Python binary that GIMP installs (v2.7, 32-bit) the dependencies will also work for the GIMP Python install.
+
+### Mac OS X
+
+Installation on Mac OS X still requires further testing. GIMP appears to also install its own Python binary on Mac OS X.
 
 Directory Structure
 -------------------
 
 When the toolbox opens an image, say at `/path/to/my-image.jpg`, it does four things (see `openImageButtonClicked`):
 
-1. Loads the label name to label integer mapping file (see `loadMetaData`). It looks for this file at `/path/to/label-mat/map.txt`.
+1. Loads the label name to label integer mapping file (see `loadMetaData`). It looks for this file at `/path/to/../map.txt`.
 2. Loads the original image (see `loadImage`). This is the image that is opened so the toolbox already knows where it is.
-3. Loads the label `.mat` file (see `loadLabelMat`). The toolbox looks for this at `/path/to/label-mat/my-image.mat`.
-4. Loads the comment associated with the image (see `loadComment`). The toolbox finds this file at `/path/to/comment-txt/my-image.txt`.
+3. Loads the label `.mat` file (see `loadLabelMat`). The toolbox looks for this at `/path/to/../label/my-image.mat`.
+4. Loads the comment associated with the image (see `loadComment`). The toolbox finds this file at `/path/to/../comment/my-image.txt`.
 
-The `/label-mat` folder contains the `.mat` array files that store the labels themselves. The `/comment-txt` folder contains text files (simple UTF-8 text files) that have the per-image comments. A text file per-image is *optional*; the folder could be empty to begin with.
-
-The `/label-img` folder has no functional purpose. If one saves the label image using the `Save PNG Label` button then the `.png` file will end up there. Note that these label *images* cannot be read from because the color map used to generate them is *not* saved with the image file. This is not a problem for `.mat` files because those contain the actual integer labels and thus do not need translation (until they are loaded again into a label image).
+The `/label` folder contains the `.mat` array files that store the labels themselves. The `/comment` folder contains text files (simple UTF-8 text files) that have the per-image comments. A text file per-image is *optional*; the folder could be empty to begin with.
 
 ### Example
 
 ```
-/path/to/2010_002080.jpg
-/path/to/comment-txt/2010_002080.txt
-/path/to/label-mat/2010_002080.mat
-/path/to/label-mat/map.txt
+/path/to/map.txt
+/path/to/image/2010_002080.jpg
+/path/to/comment/2010_002080.txt
+/path/to/label/2010_002080.mat
 ```
 
 Workflow
@@ -70,16 +122,16 @@ Workflow
 2. Create a new blank image
 3. Open `Toolbox > Labeling` in the menu
 4. Open image using toolbox's `Open Image` button
-5. Edit label image *on label layer*
+5. Edit label image *on label layer*, avoiding anti-aliasing everywhere
 6. Save label using toolbox's `Save MAT Label` button
-7. Repeat step 4 for more images
+7. Repeat step 4 for more images, optionally using the `Previous` and `Next` buttons.
 
 Usage
 -----
 
 The open/save state of an image when using the toolbox exists *independently* of GIMP's open/save states. When using the toolbox use only the `Open Image` and `Save MAT Label` buttons on the toolbox.
 
-When the toolbox loads an image it will load the original image into a layer named `Original` and the label image into a layer named `Label` on top of the `Original` layer. The color map is randomized on load and can be shuffled further using the `Shuffle Colors` button. *The only changes that are saved are edits to the `Label` layer.* Changes to any other layer are discarded/ignored.
+When the toolbox loads an image it will load the original image into a layer named `Original` and load all of the label layers on top of the `Original` layer. The color map is randomized on load and can be shuffled further using the `Shuffle Colors` button. *The only changes that are saved are edits to layers whose name starts with `Label` (e.g. `LabelGrass`, `Label_wabalabaDUBDUB`.* Changes to any other layer are discarded/ignored.
 
 Remember that ***tools will only operate on the currently selected layer***. The list of layers should be in the interface by default. If not you can bring it up using `Ctrl+L`.
 
@@ -103,14 +155,10 @@ Screenshots
 TODO
 ----
 
-* Cross-platform testing
-* Support multiple layers of labels
 * Write a full tutorial
 * Document `.mat` label array format
 * Document Super Pixel Helper
 * Reduce toolbox height, maybe use two columns?
-* Support alternative label formats (e.g. `.ipynb`, packed binary integers, etc.)
-* Add previous/next buttons for quick navigation
+* Support alternative label formats (e.g. `.ipy`, packed binary integers, etc.)
 * Add configuration file for supporting options such as default blend mode, etc.
-* Add an invalid label sanity check
 
