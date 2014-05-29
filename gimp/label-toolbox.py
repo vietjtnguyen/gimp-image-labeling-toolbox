@@ -1059,6 +1059,8 @@ class LabelToolbox(gtk.Window):
     gimp.progress_update(100)
     pdb.gimp_progress_set_text('Saved labels as "{0}"!'.format(mat_filename))
     pdb.gimp_progress_end()
+    return True
+    # Should have it return False on any error or incomplete save.
 
   def intLabelImageToRgbLabelImage(self, int_label_image):
     return self.colormap[self.shufflemap[int_label_image]]
@@ -1238,6 +1240,19 @@ class LabelToolbox(gtk.Window):
 
   def openImageButtonClicked(self, widget):
     logging.info('Button clicked')
+    if pdb.gimp_image_is_dirty(self.image):
+      dialog = gtk.Dialog('Unsaved Changes Detected', None, gtk.DIALOG_MODAL, (gtk.STOCK_OK, gtk.RESPONSE_OK, gtk.STOCK_NO, gtk.RESPONSE_NO, gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
+      label = gtk.Label('Save changes before opening another image?')
+      dialog.vbox.pack_start(label, padding=4)
+      label.show()
+      dialog.set_default_response(gtk.RESPONSE_CANCEL)
+      response = dialog.run()
+      dialog.destroy()
+      if response == gtk.RESPONSE_CANCEL:
+        return
+      elif response == gtk.RESPONSE_OK:
+        if not self.saveLabelMat():
+          return
     dialog = gtk.FileChooserDialog(
         'Open Image...',
         None, 
@@ -1255,6 +1270,7 @@ class LabelToolbox(gtk.Window):
       self.updateLayerList()
       self.selectLabelLayers()
       pdb.gimp_image_undo_enable(self.image)
+      pdb.gimp_image_clean_all(self.image);
     dialog.destroy()
 
   def loadLabelMatButtonClicked(self, widget):
@@ -1264,9 +1280,23 @@ class LabelToolbox(gtk.Window):
   def saveLabelMatButtonClicked(self, widget):
     logging.info('Button clicked')
     self.saveLabelMat()
+    pdb.gimp_image_clean_all(self.image);
 
   def previousImageButtonClicked(self, widget):
     logging.info('Button clicked')
+    if pdb.gimp_image_is_dirty(self.image):
+      dialog = gtk.Dialog('Unsaved Changes Detected', None, gtk.DIALOG_MODAL, (gtk.STOCK_OK, gtk.RESPONSE_OK, gtk.STOCK_NO, gtk.RESPONSE_NO, gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
+      label = gtk.Label('Save changes before going to previous image?')
+      dialog.vbox.pack_start(label, padding=4)
+      label.show()
+      dialog.set_default_response(gtk.RESPONSE_CANCEL)
+      response = dialog.run()
+      dialog.destroy()
+      if response == gtk.RESPONSE_CANCEL:
+        return
+      elif response == gtk.RESPONSE_OK:
+        if not self.saveLabelMat():
+          return
     pdb.gimp_image_undo_disable(self.image)
     self.jumpImage(-1)
     self.loadMetaData()
@@ -1276,9 +1306,23 @@ class LabelToolbox(gtk.Window):
     self.updateLayerList()
     self.selectLabelLayers()
     pdb.gimp_image_undo_enable(self.image)
+    pdb.gimp_image_clean_all(self.image);
 
   def nextImageButtonClicked(self, widget):
     logging.info('Button clicked')
+    if pdb.gimp_image_is_dirty(self.image):
+      dialog = gtk.Dialog('Unsaved Changes Detected', None, gtk.DIALOG_MODAL, (gtk.STOCK_OK, gtk.RESPONSE_OK, gtk.STOCK_NO, gtk.RESPONSE_NO, gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
+      label = gtk.Label('Save changes before going to next image?')
+      dialog.vbox.pack_start(label, padding=4)
+      label.show()
+      dialog.set_default_response(gtk.RESPONSE_CANCEL)
+      response = dialog.run()
+      dialog.destroy()
+      if response == gtk.RESPONSE_CANCEL:
+        return
+      elif response == gtk.RESPONSE_OK:
+        if not self.saveLabelMat():
+          return
     pdb.gimp_image_undo_disable(self.image)
     self.jumpImage(+1)
     self.loadMetaData()
@@ -1288,6 +1332,7 @@ class LabelToolbox(gtk.Window):
     self.updateLayerList()
     self.selectLabelLayers()
     pdb.gimp_image_undo_enable(self.image)
+    pdb.gimp_image_clean_all(self.image);
 
   def completionMatchSelected(self, completion, model, iterator):
     logging.info('Label name completion selected')
