@@ -1246,6 +1246,7 @@ class LabelToolbox(gtk.Window):
     dialog.set_default_response(gtk.RESPONSE_OK)
     response = dialog.run()
     if response == gtk.RESPONSE_OK:
+      pdb.gimp_image_undo_disable(self.image)
       self.updateImagePaths(dialog.get_filename())
       self.loadMetaData()
       self.loadImage()
@@ -1253,6 +1254,7 @@ class LabelToolbox(gtk.Window):
       self.loadComment()
       self.updateLayerList()
       self.selectLabelLayers()
+      pdb.gimp_image_undo_enable(self.image)
     dialog.destroy()
 
   def loadLabelMatButtonClicked(self, widget):
@@ -1265,6 +1267,7 @@ class LabelToolbox(gtk.Window):
 
   def previousImageButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_disable(self.image)
     self.jumpImage(-1)
     self.loadMetaData()
     self.loadImage()
@@ -1272,9 +1275,11 @@ class LabelToolbox(gtk.Window):
     self.loadComment()
     self.updateLayerList()
     self.selectLabelLayers()
+    pdb.gimp_image_undo_enable(self.image)
 
   def nextImageButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_disable(self.image)
     self.jumpImage(+1)
     self.loadMetaData()
     self.loadImage()
@@ -1282,6 +1287,7 @@ class LabelToolbox(gtk.Window):
     self.loadComment()
     self.updateLayerList()
     self.selectLabelLayers()
+    pdb.gimp_image_undo_enable(self.image)
 
   def completionMatchSelected(self, completion, model, iterator):
     logging.info('Label name completion selected')
@@ -1297,6 +1303,7 @@ class LabelToolbox(gtk.Window):
 
   def shuffleColorsButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     temp_int_label_images_store = {}
     def storeIntLabelImages(layer):
       if not pdb.gimp_item_is_group(layer):
@@ -1313,6 +1320,7 @@ class LabelToolbox(gtk.Window):
     self.applyToSelectedLayers(storeIntLabelImages)
     self.shuffle()
     self.applyToSelectedLayers(restoreRgbLabelImages)
+    pdb.gimp_image_undo_group_end(self.image)
 
   def layersSelectAllButtonClicked(self, widget):
     logging.info('Button clicked')
@@ -1339,14 +1347,17 @@ class LabelToolbox(gtk.Window):
 
   def labelOpacitySliderChange(self, widget, scroll, value):
     logging.info('Opacity slider changed')
+    pdb.gimp_image_undo_group_start(self.image)
     def updateOpacity(layer):
       layer.opacity = min(100.0, max(0.0, value))
       layer.flush()
     self.applyToSelectedLayers(updateOpacity)
+    pdb.gimp_image_undo_group_end(self.image)
     pdb.gimp_displays_flush()
 
   def toggleLabelButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     selected_layer_visibility = self.applyToSelectedLayers(lambda x: x.visible)
     if len(selected_layer_visibility) == 0:
       return
@@ -1360,52 +1371,66 @@ class LabelToolbox(gtk.Window):
         pdb.gimp_image_set_active_layer(self.image, self.original_layer)
       layer.flush()
     self.applyToSelectedLayers(toggleLayerVisibility)
+    pdb.gimp_image_undo_group_end(self.image)
     pdb.gimp_displays_flush()
 
   def normalBlendButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     def setLayerMode(layer):
       layer.mode = gimpenums.NORMAL_MODE
       layer.flush()
     self.applyToSelectedLayers(setLayerMode)
+    pdb.gimp_image_undo_group_end(self.image)
     pdb.gimp_displays_flush()
 
   def grainBlendButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     def setLayerMode(layer):
       layer.mode = gimpenums.GRAIN_MERGE_MODE
       layer.flush()
     self.applyToSelectedLayers(setLayerMode)
+    pdb.gimp_image_undo_group_end(self.image)
     pdb.gimp_displays_flush()
 
   def colorBlendButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     def setLayerMode(layer):
       layer.mode = gimpenums.COLOR_MODE
       layer.flush()
     self.applyToSelectedLayers(setLayerMode)
+    pdb.gimp_image_undo_group_end(self.image)
     pdb.gimp_displays_flush()
 
   def labelSelectionButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     layer = pdb.gimp_image_get_active_layer(self.image)
     pdb.gimp_selection_sharpen(self.image)
     pdb.gimp_edit_fill(layer, gimpenums.FOREGROUND_FILL)
+    pdb.gimp_image_undo_group_end(self.image)
     layer.flush()
     pdb.gimp_displays_flush()
 
   def labelDeleteButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     layer = pdb.gimp_image_get_active_layer(self.image)
     pdb.gimp_selection_sharpen(self.image)
     pdb.gimp_edit_clear(layer)
+    pdb.gimp_image_undo_group_end(self.image)
     layer.flush()
     pdb.gimp_displays_flush()
 
   def layerAlphaSelectionButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     CHANNEL_OP_REPLACE = 2
     pdb.gimp_image_select_item(self.image, CHANNEL_OP_REPLACE, pdb.gimp_image_get_active_layer(self.image))
+    pdb.gimp_selection_sharpen(self.image)
+    pdb.gimp_image_undo_group_end(self.image)
     pdb.gimp_displays_flush()
 
   def clearSelectionButtonClicked(self, widget):
@@ -1420,27 +1445,35 @@ class LabelToolbox(gtk.Window):
 
   def smoothSelectionButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     pdb.gimp_selection_grow(self.image, 3)
     pdb.gimp_selection_shrink(self.image, 3)
     pdb.gimp_selection_sharpen(self.image)
+    pdb.gimp_image_undo_group_end(self.image)
     pdb.gimp_displays_flush()
 
   def invertSelectionButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     pdb.gimp_selection_invert(self.image)
     pdb.gimp_selection_sharpen(self.image)
+    pdb.gimp_image_undo_group_end(self.image)
     pdb.gimp_displays_flush()
 
   def growSelectionButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     pdb.gimp_selection_grow(self.image, 1)
     pdb.gimp_selection_sharpen(self.image)
+    pdb.gimp_image_undo_group_end(self.image)
     pdb.gimp_displays_flush()
 
   def shrinkSelectionButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     pdb.gimp_selection_shrink(self.image, 1)
     pdb.gimp_selection_sharpen(self.image)
+    pdb.gimp_image_undo_group_end(self.image)
     pdb.gimp_displays_flush()
 
   def slicColorSpaceButtonToggled(self, widget):
