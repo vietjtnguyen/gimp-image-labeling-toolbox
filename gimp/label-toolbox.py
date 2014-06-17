@@ -186,6 +186,7 @@ class LabelToolbox(gtk.Window):
 
     # toolbox states
     self.is_image_open = False
+    self.set_path = ''
     self.image_full_path = ''
     self.working_path = ''
     self.image_list = []
@@ -247,12 +248,7 @@ class LabelToolbox(gtk.Window):
     container[-1].add(widget)
     container.append(widget)
 
-    widget = self.open_image_button = gtk.Button('Open')
-    widget.show()
-    widget.connect('clicked', self.openImageButtonClicked)
-    container[-1].add(widget)
-
-    widget = self.save_label_mat_button = gtk.Button('Save MAT Label')
+    widget = self.save_label_mat_button = gtk.Button('Save')
     widget.show()
     widget.connect('clicked', self.saveLabelMatButtonClicked)
     container[-1].add(widget)
@@ -276,6 +272,23 @@ class LabelToolbox(gtk.Window):
     widget.connect('clicked', self.nextImageButtonClicked)
     container[-1].add(widget)
     self.only_available_with_open_image.append(widget)
+
+    container.pop()
+
+    widget = gtk.HBox(spacing=4, homogeneous=True)
+    widget.show()
+    container[-1].add(widget)
+    container.append(widget)
+
+    widget = self.open_image_button = gtk.Button('Open Image')
+    widget.show()
+    widget.connect('clicked', self.openImageButtonClicked)
+    container[-1].add(widget)
+
+    widget = self.open_set_button = gtk.Button('Open Set')
+    widget.show()
+    widget.connect('clicked', self.openSetButtonClicked)
+    container[-1].add(widget)
 
     container.pop()
 
@@ -817,20 +830,21 @@ class LabelToolbox(gtk.Window):
     alert.run()
     alert.destroy()
 
-  def updateImagePaths(self, image_full_path):
+  def updateImagePaths(self, image_full_path, update_image_list=True):
     self.image_full_path = image_full_path
     self.working_path, self.image_filename = os.path.split(self.image_full_path)
     self.image_name, self.image_extension = os.path.splitext(self.image_filename)
-    self.image_name_box.set_text(self.image_filename)
-    self.image_list = sorted(filter(lambda x: x.endswith('.jpg'), os.listdir(self.working_path)))
-    self.image_index = self.image_list.index(self.image_filename)
+    if update_image_list:
+      self.image_list = sorted(filter(lambda x: x.endswith('.jpg'), os.listdir(self.working_path)))
+      self.image_index = self.image_list.index(self.image_filename)
+    self.image_name_box.set_text('%d/%d: %s' % (self.image_index+1, len(self.image_list), self.image_name))
 
   def jumpImage(self, offset):
     self.image_index = ( self.image_index + offset + len(self.image_list)) % len(self.image_list)
     self.image_filename = self.image_list[self.image_index]
     self.image_full_path = os.path.join(self.working_path, self.image_filename)
     self.image_name, self.image_extension = os.path.splitext(self.image_filename)
-    self.image_name_box.set_text(self.image_filename)
+    self.image_name_box.set_text('%d/%d: %s' % (self.image_index+1, len(self.image_list), self.image_name))
 
   def loadMetaData(self):
     label_map_filename = os.path.join(self.working_path, self.map_relative_path, 'map.txt')
@@ -1266,6 +1280,58 @@ class LabelToolbox(gtk.Window):
     if response == gtk.RESPONSE_OK:
       pdb.gimp_image_undo_disable(self.image)
       self.updateImagePaths(dialog.get_filename())
+      self.loadMetaData()
+      self.loadImage()
+      self.loadLabelMat()
+      self.loadComment()
+      self.updateLayerList()
+      self.selectLabelLayers()
+      pdb.gimp_image_undo_enable(self.image)
+      pdb.gimp_image_clean_all(self.image);
+    dialog.destroy()
+
+  def openSetButtonClicked(self, widget):
+    logging.info('Button clicked')
+    if pdb.gimp_image_is_dirty(self.image):
+      dialog = gtk.Dialog('Unsaved Changes Detected', None, gtk.DIALOG_MODAL, (gtk.STOCK_OK, gtk.RESPONSE_OK, gtk.STOCK_NO, gtk.RESPONSE_NO, gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
+      label = gtk.Label('Save changes before opening another image?')
+      dialog.vbox.pack_start(label, padding=4)
+      label.show()
+      dialog.set_default_response(gtk.RESPONSE_CANCEL)
+      response = dialog.run()
+      dialog.destroy()
+      if response == gtk.RESPONSE_CANCEL:
+        return
+      elif response == gtk.RESPONSE_OK:
+        if not self.saveLabelMat():
+          return
+    dialog = gtk.FileChooserDialog(
+        'Open Set...',
+        None, 
+        gtk.FILE_CHOOSER_ACTION_OPEN,
+        (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+    dialog.set_default_response(gtk.RESPONSE_OK)
+    response = dialog.run()
+    if response == gtk.RESPONSE_OK:
+      self.set_path = dialog.get_filename()
+      # Custom update_image_paths
+      set_folder, set_filename = os.path.split(self.set_path)
+      # Populate image list
+      self.image_list = []
+      self.image_index = 0
+      with open(self.set_path, 'r') as f:
+        for line in f:
+          match = re.search(r'([0-9]{4}_[0-9]{6})', line)
+          if match:
+            image_name = match.group(0)
+            self.image_list.append(image_name+'.jpg')
+      if len(self.image_list) == 0:
+        self.alertDialog('Image set list produced an empty list!')
+        dialog.destroy()
+        return
+      # Open first image in set
+      pdb.gimp_image_undo_disable(self.image)
+      self.updateImagePaths(os.path.join(set_folder, '..', 'image', self.image_list[self.image_index]), False)
       self.loadMetaData()
       self.loadImage()
       self.loadLabelMat()
