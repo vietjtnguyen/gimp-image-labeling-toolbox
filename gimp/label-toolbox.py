@@ -283,6 +283,35 @@ class LabelToolbox(gtk.Window):
     widget.show()
     container[-1].add(widget)
 
+    widget = gtk.Expander('Comment')
+    widget.show()
+    widget.set_expanded(True)
+    widget.set_resize_mode(gtk.RESIZE_PARENT)
+    container[-1].add(widget)
+    container.append(widget)
+
+    widget = gtk.VBox(spacing=4, homogeneous=False)
+    widget.show()
+    container[-1].add(widget)
+    container.append(widget)
+
+    widget = self.comment = gtk.TextView()
+    self.comment_buffer = self.comment.get_buffer()
+    widget.set_wrap_mode(gtk.WRAP_CHAR)
+    widget.show()
+    #widget.connect('changed', self.commentChanged)
+    self.comment_buffer.connect('changed', self.commentChanged)
+    container[-1].add(widget)
+    self.only_available_with_open_image.append(widget)
+
+    container.pop()
+
+    container.pop()
+
+    widget = gtk.HSeparator()
+    widget.show()
+    container[-1].add(widget)
+
     widget = gtk.Label('Current Foreground Color Label')
     widget.show()
     container[-1].add(widget)
@@ -722,32 +751,6 @@ class LabelToolbox(gtk.Window):
     widget.show()
     container[-1].add(widget)
 
-    widget = gtk.Expander('Comment')
-    widget.show()
-    widget.set_expanded(False)
-    widget.set_resize_mode(gtk.RESIZE_PARENT)
-    container[-1].add(widget)
-    container.append(widget)
-
-    widget = gtk.VBox(spacing=4, homogeneous=False)
-    widget.show()
-    container[-1].add(widget)
-    container.append(widget)
-
-    widget = self.comment = gtk.Entry()
-    widget.show()
-    widget.connect('changed', self.commentChanged)
-    container[-1].add(widget)
-    self.only_available_with_open_image.append(widget)
-
-    container.pop()
-
-    container.pop()
-
-    widget = gtk.HSeparator()
-    widget.show()
-    container[-1].add(widget)
-
     widget = gtk.Expander('Shortcuts Reference')
     widget.show()
     widget.set_expanded(False)
@@ -1128,7 +1131,7 @@ class LabelToolbox(gtk.Window):
     comment_filename = os.path.join(self.working_path, self.comment_relative_path, self.image_name+'.txt')
     try:
       with open(comment_filename, 'r') as f:
-        self.comment.set_text(f.read())
+        self.comment.get_buffer().set_text(f.read())
     except IOError:
       pass
   
@@ -1589,11 +1592,11 @@ class LabelToolbox(gtk.Window):
         segmentation_layer = None
     pdb.gimp_displays_flush()
 
-  def commentChanged(self, widget):
+  def commentChanged(self, buffer):
     logging.info('Comment changed')
     comment_filename = os.path.join(self.working_path, self.comment_relative_path, self.image_name+'.txt')
     with open(comment_filename, 'w') as f:
-      f.write(widget.get_text())
+      f.write(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter()))
 
   def update(self, *args):
     self.updateInterface()
