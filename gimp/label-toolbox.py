@@ -221,25 +221,29 @@ class LabelToolbox(gtk.Window):
 
     window = gtk.Window.__init__(self, *args)
     self.show()
-    self.set_border_width(4)
+    self.set_border_width(0)
     self.set_keep_above(True)
-    self.set_resizable(False)
+    self.set_resizable(True)
     self.connect('destroy', gtk.main_quit)
 
     container = [self]
-
-    widget = gtk.VBox(spacing=4, homogeneous=False)
+    
+    widget = gtk.ScrolledWindow()
+    widget.set_border_width(0)
+    widget.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    self.set_geometry_hints(widget, 216, -1, -1, -1, -1, -1, -1, -1, -1, -1)
     widget.show()
-    widget.set_size_request(200, -1)
     container[-1].add(widget)
     container.append(widget)
 
-    widget = gtk.Label('Current Image')
+    widget = gtk.VBox(spacing=4, homogeneous=False)
+    widget.set_border_width(8)
     widget.show()
-    container[-1].add(widget)
+    widget.set_size_request(200, -1)
+    container[-1].add_with_viewport(widget)
+    container.append(widget)
 
-    widget = self.image_name_box = gtk.Entry()
-    widget.set_editable(False)
+    widget = gtk.Label('Current Image')
     widget.show()
     container[-1].add(widget)
 
@@ -248,10 +252,50 @@ class LabelToolbox(gtk.Window):
     container[-1].add(widget)
     container.append(widget)
 
+    widget = self.open_image_button = gtk.Button('Open Image')
+    widget.show()
+    widget.connect('clicked', self.openImageButtonClicked)
+    container[-1].add(widget)
+
+    widget = self.open_set_button = gtk.Button('Open Set')
+    widget.show()
+    widget.connect('clicked', self.openSetButtonClicked)
+    container[-1].add(widget)
+
+    container.pop()
+
+    widget = gtk.HBox(spacing=4, homogeneous=False)
+    widget.show()
+    container[-1].add(widget)
+    container.append(widget)
+
+    widget = self.image_name_box = gtk.Entry()
+    widget.set_editable(False)
+    widget.show()
+    container[-1].add(widget)
+
     widget = self.save_label_mat_button = gtk.Button('Save')
     widget.show()
     widget.connect('clicked', self.saveLabelMatButtonClicked)
+    container[-1].pack_end(widget, False, False, 0)
+    self.only_available_with_open_image.append(widget)
+
+    container.pop()
+
+    widget = gtk.HBox(spacing=4, homogeneous=False)
+    widget.show()
     container[-1].add(widget)
+    container.append(widget)
+
+    widget = self.jump_to_box = gtk.Entry()
+    widget.set_editable(True)
+    widget.show()
+    container[-1].add(widget)
+
+    widget = self.jump_image_button = gtk.Button('Jump To')
+    widget.show()
+    widget.connect('clicked', self.jumpImageButtonClicked)
+    container[-1].pack_end(widget, False, False, 0)
     self.only_available_with_open_image.append(widget)
 
     container.pop()
@@ -272,23 +316,6 @@ class LabelToolbox(gtk.Window):
     widget.connect('clicked', self.nextImageButtonClicked)
     container[-1].add(widget)
     self.only_available_with_open_image.append(widget)
-
-    container.pop()
-
-    widget = gtk.HBox(spacing=4, homogeneous=True)
-    widget.show()
-    container[-1].add(widget)
-    container.append(widget)
-
-    widget = self.open_image_button = gtk.Button('Open Image')
-    widget.show()
-    widget.connect('clicked', self.openImageButtonClicked)
-    container[-1].add(widget)
-
-    widget = self.open_set_button = gtk.Button('Open Set')
-    widget.show()
-    widget.connect('clicked', self.openSetButtonClicked)
-    container[-1].add(widget)
 
     container.pop()
 
@@ -809,7 +836,10 @@ class LabelToolbox(gtk.Window):
 
     container.pop()
 
+    container.pop()
+
     self.show()
+    self.resize(216, 700)
 
     gobject.timeout_add(100, self.update, self)  
 
@@ -837,14 +867,16 @@ class LabelToolbox(gtk.Window):
     if update_image_list:
       self.image_list = sorted(filter(lambda x: x.endswith('.jpg'), os.listdir(self.working_path)))
       self.image_index = self.image_list.index(self.image_filename)
-    self.image_name_box.set_text('%d/%d: %s' % (self.image_index+1, len(self.image_list), self.image_name))
+    self.image_name_box.set_text('%s' % self.image_name)
+    self.jump_to_box.set_text('%d' % (self.image_index+1))
 
   def jumpImage(self, offset):
     self.image_index = ( self.image_index + offset + len(self.image_list)) % len(self.image_list)
     self.image_filename = self.image_list[self.image_index]
     self.image_full_path = os.path.join(self.working_path, self.image_filename)
     self.image_name, self.image_extension = os.path.splitext(self.image_filename)
-    self.image_name_box.set_text('%d/%d: %s' % (self.image_index+1, len(self.image_list), self.image_name))
+    self.image_name_box.set_text('%s' % self.image_name)
+    self.jump_to_box.set_text('%d' % (self.image_index+1))
 
   def loadMetaData(self):
     label_map_filename = os.path.join(self.working_path, self.map_relative_path, 'map.txt')
@@ -1349,6 +1381,41 @@ class LabelToolbox(gtk.Window):
   def saveLabelMatButtonClicked(self, widget):
     logging.info('Button clicked')
     self.saveLabelMat()
+    pdb.gimp_image_clean_all(self.image);
+    
+  def jumpImageButtonClicked(self, widget):
+    logging.info('Button clicked')
+    if pdb.gimp_image_is_dirty(self.image):
+      dialog = gtk.Dialog('Unsaved Changes Detected', None, gtk.DIALOG_MODAL, (gtk.STOCK_OK, gtk.RESPONSE_OK, gtk.STOCK_NO, gtk.RESPONSE_NO, gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
+      label = gtk.Label('Save changes before going to previous image?')
+      dialog.vbox.pack_start(label, padding=4)
+      label.show()
+      dialog.set_default_response(gtk.RESPONSE_CANCEL)
+      response = dialog.run()
+      dialog.destroy()
+      if response == gtk.RESPONSE_CANCEL:
+        return
+      elif response == gtk.RESPONSE_OK:
+        if not self.saveLabelMat():
+          return
+    try:
+      dest_image_idx = int(self.jump_to_box.get_text())-1
+      self.image_list[dest_image_idx]
+    except ValueError:
+      self.alertDialog('Could not convert %s into an integer.' % self.jump_to_box.get_text(), logging.error)
+      return
+    except IndexError:
+      self.alertDialog('Image does not exist at index %d.' % (dest_image_idx+1), logging.error)
+      return
+    pdb.gimp_image_undo_disable(self.image)
+    self.jumpImage(dest_image_idx - self.image_index)
+    self.loadMetaData()
+    self.loadImage()
+    self.loadLabelMat()
+    self.loadComment()
+    self.updateLayerList()
+    self.selectLabelLayers()
+    pdb.gimp_image_undo_enable(self.image)
     pdb.gimp_image_clean_all(self.image);
 
   def previousImageButtonClicked(self, widget):
