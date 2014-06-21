@@ -1374,13 +1374,11 @@ class LabelToolbox(gtk.Window):
       pdb.gimp_image_clean_all(self.image);
     dialog.destroy()
 
-  def loadLabelMatButtonClicked(self, widget):
-    logging.info('Button clicked')
-    self.loadLabelMat()
-
   def saveLabelMatButtonClicked(self, widget):
     logging.info('Button clicked')
+    pdb.gimp_image_undo_group_start(self.image)
     self.saveLabelMat()
+    pdb.gimp_image_undo_group_end(self.image)
     pdb.gimp_image_clean_all(self.image);
     
   def jumpImageButtonClicked(self, widget):
@@ -1484,7 +1482,16 @@ class LabelToolbox(gtk.Window):
 
   def shuffleColorsButtonClicked(self, widget):
     logging.info('Button clicked')
-    pdb.gimp_image_undo_group_start(self.image)
+    dialog = gtk.Dialog('Shuffle Colors?', None, gtk.DIALOG_MODAL, (gtk.STOCK_OK, gtk.RESPONSE_OK, gtk.STOCK_NO, gtk.RESPONSE_NO))
+    label = gtk.Label('Are you sure you want to shuffle colors? The undo history will be cleared.')
+    dialog.vbox.pack_start(label, padding=4)
+    label.show()
+    dialog.set_default_response(gtk.RESPONSE_NO)
+    response = dialog.run()
+    dialog.destroy()
+    if response == gtk.RESPONSE_NO:
+      return
+    pdb.gimp_image_undo_disable(self.image)
     temp_int_label_images_store = {}
     def storeIntLabelImages(layer):
       if not pdb.gimp_item_is_group(layer):
@@ -1501,7 +1508,7 @@ class LabelToolbox(gtk.Window):
     self.applyToSelectedLayers(storeIntLabelImages)
     self.shuffle()
     self.applyToSelectedLayers(restoreRgbLabelImages)
-    pdb.gimp_image_undo_group_end(self.image)
+    pdb.gimp_image_undo_enable(self.image)
 
   def layersSelectAllButtonClicked(self, widget):
     logging.info('Button clicked')
