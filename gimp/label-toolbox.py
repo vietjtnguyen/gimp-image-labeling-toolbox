@@ -1159,7 +1159,7 @@ class LabelToolbox(gtk.Window):
     pixel_region[0:self.image.width, 0:self.image.height] = array.array('B', rgba_label_image.ravel()).tostring()
     label_layer.merge_shadow(True)
     label_layer.update(0, 0, self.image.width, self.image.height)
-    label_layer.flush()
+    #label_layer.flush()
 
   def layerToRgbLabelImage(self, label_layer):
     pdb.gimp_selection_none(self.image)
@@ -1506,7 +1506,7 @@ class LabelToolbox(gtk.Window):
   def shuffleColorsButtonClicked(self, widget):
     logging.info('Button clicked')
     dialog = gtk.Dialog('Shuffle Colors?', None, gtk.DIALOG_MODAL, (gtk.STOCK_OK, gtk.RESPONSE_OK, gtk.STOCK_NO, gtk.RESPONSE_NO))
-    label = gtk.Label('Are you sure you want to shuffle colors? The undo history will be cleared.')
+    label = gtk.Label('Are you sure you want to shuffle colors?\nThe undo history will be cleared.')
     dialog.vbox.pack_start(label, padding=4)
     label.show()
     dialog.set_default_response(gtk.RESPONSE_NO)
