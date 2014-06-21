@@ -22,6 +22,22 @@ import shutil
 import string
 import sys
 
+import cProfile, pstats, StringIO
+profiler = None
+def startProfile():
+  global profiler
+  profiler = cProfile.Profile()
+  profiler.enable()
+def endProfile():
+  global profiler
+  profiler.disable()
+  s = StringIO.StringIO()
+  s.write('\n')
+  sortby = 'cumulative'
+  ps = pstats.Stats(profiler, stream=s).sort_stats(sortby)
+  ps.print_stats()
+  logging.debug(s.getvalue())
+
 # Attempt to add default Python 2.7 install to allow GIMP's Python to find
 # dependencies
 if os.name == 'nt':
@@ -1063,7 +1079,7 @@ class LabelToolbox(gtk.Window):
     # variables from the previous MAT file.
     mat_contents = {}
     mat_contents.update(self.mat_leftover_contents)
-    logging.debug('Leftover contents being added to .mat file:\n%s' % pprint.pformat(mat_contents))
+    #logging.debug('Leftover contents being added to .mat file:\n%s' % pprint.pformat(mat_contents))
     # Get the layer hierarchy.
     current_layer_hierarchy = layerHierarchyFromImage(self.image)
     logging.debug('State of layer hierarchy during label save:\n%s' % pprint.pformat(current_layer_hierarchy))
@@ -1102,7 +1118,7 @@ class LabelToolbox(gtk.Window):
     if os.path.exists(mat_filename):
       shutil.copyfile(mat_filename, mat_filename+'.old')
     # Save the actual `.mat` file.
-    logging.debug('Final .mat dictionary prior to saving:\n%s' % pprint.pformat(mat_contents))
+    #logging.debug('Final .mat dictionary prior to saving:\n%s' % pprint.pformat(mat_contents))
     savemat(mat_filename, mat_contents, do_compression=True)
     # Update the GIMP interface.
     gimp.progress_update(100)
@@ -1115,15 +1131,18 @@ class LabelToolbox(gtk.Window):
     return self.colormap[self.shufflemap[int_label_image]]
 
   def rgbLabelImageToIntLabelImage(self, rgb_label_image):
-    int_label_image = np.zeros((rgb_label_image.shape[0], rgb_label_image.shape[1]), dtype='uint16')
     unknown_color_encountered = False
-    for i in range(int_label_image.shape[0]):
-      for j in range(int_label_image.shape[1]):
-        try:
-          int_label_image[i, j] = self.reversemap[tuple(rgb_label_image[i, j])]
-        except KeyError:
-          int_label_image[i, j] = 0
-          unknown_color_encountered = True
+    tmp_image = np.array(rgb_label_image, dtype='uint32')
+    rgbint_label_image = tmp_image[:, :, 0]*256*256 + tmp_image[:, :, 1]*256 + tmp_image[:, :, 2]
+    uniq_labels = np.unique(rgbint_label_image)
+    int_label_image = np.zeros(rgbint_label_image.shape, dtype='uint32')
+    for label in uniq_labels:
+      try:
+        int_label_image[rgbint_label_image == label] = self.int_reversemap[label]
+      except KeyError:
+        logging.error('Could not find %d in int_reversemap.' % label)
+        int_label_image[rgbint_label_image == label] = 0
+        unknown_color_encountered = True
     if unknown_color_encountered:
       self.alertDialog('An unknown color was found in the label image. This most likely occured some transparent area has some unknown color. In this case the transparent area will automatically be assigned the label "empty". Another possibility is because some operation were performed with anti-aliasing or the foreground color was not updated after a shuffle. In this case data corruption has occured and data may have been lost or corrupted. Please back up the label file before attempting to save.')
     return int_label_image
@@ -1141,7 +1160,6 @@ class LabelToolbox(gtk.Window):
     label_layer.merge_shadow(True)
     label_layer.update(0, 0, self.image.width, self.image.height)
     label_layer.flush()
-    pdb.gimp_displays_flush()
 
   def layerToRgbLabelImage(self, label_layer):
     pdb.gimp_selection_none(self.image)
@@ -1162,10 +1180,15 @@ class LabelToolbox(gtk.Window):
     all_but_zero = self.shufflemap[1:]
     np.random.shuffle(all_but_zero)
     self.shufflemap[1:] = all_but_zero
-    self.reversemap = {}
+    self.tuple_reversemap = {}
+    self.int_reversemap = {}
+    tuple_to_int = lambda x: x[0]*256*256+x[1]*256+x[2]
     for i in range(self.num_of_labels):
-      self.reversemap[tuple(self.colormap[self.shufflemap[i]])] = i
-    self.reversemap[(0, 0, 0)] = 0
+      rgb_tuple = tuple(self.colormap[self.shufflemap[i]])
+      self.tuple_reversemap[rgb_tuple] = i
+      self.int_reversemap[tuple_to_int(rgb_tuple)] = i
+    self.tuple_reversemap[(0, 0, 0)] = 0
+    self.int_reversemap[0] = 0
 
   def setForegroundColorFromLabelName(self):
     label_name = self.label_name.get_text()
@@ -1208,11 +1231,11 @@ class LabelToolbox(gtk.Window):
       if foreground_color != self.last_foreground_color:
         self.last_foreground_color = foreground_color
         # NOTE (Viet): There can actually be two key errors here: one for
-        # `reversemap` and one for `label_int_to_name_map`. Instead of two
+        # `tuple_reversemap` and one for `label_int_to_name_map`. Instead of two
         # cascaded key checks I thought an exception catch here would be
         # cleaner.
         try:
-          foreground_name = self.label_int_to_name_map[self.reversemap[foreground_color]]
+          foreground_name = self.label_int_to_name_map[self.tuple_reversemap[foreground_color]]
           self.current_label.set_text(foreground_name)
         except KeyError:
           self.current_label.set_text('{0} not found'.format(str(foreground_color)))
@@ -1509,6 +1532,7 @@ class LabelToolbox(gtk.Window):
     self.shuffle()
     self.applyToSelectedLayers(restoreRgbLabelImages)
     pdb.gimp_image_undo_enable(self.image)
+    pdb.gimp_displays_flush()
 
   def layersSelectAllButtonClicked(self, widget):
     logging.info('Button clicked')
