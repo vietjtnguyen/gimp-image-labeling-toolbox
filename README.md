@@ -53,13 +53,18 @@ The following instructions are "from memory" and should work but have not been t
     - `sudo pip install --upgrade scipy`
 4. *[OPTIONAL]* Install SciKit-Image.
     - `sudo pip install scikit-image`
-5. Install plug-in.
-    - `sudo apt-get install -y wget`
-    - `wget -P $HOME/.gimp-2.8/plug-ins https://raw.githubusercontent.com/vietjtnguyen/gimp-image-labeling-toolbox/master/gimp/label-toolbox.py`
-    - `wget -P $HOME/.gimp-2.8/plug-ins https://raw.githubusercontent.com/vietjtnguyen/gimp-image-labeling-toolbox/master/gimp/appdirs.py`
-6. Close GIMP and reopen it.
-7. Create a new, blank image.
-8. Open the toolbox via the file menu `Toolbox > Labeling`.
+5. Install GIMP 2.8.
+    - <http://www.gimp.org/downloads/>
+    - If you're on Ubuntu 12.04 you can get an updated PPA [here](http://www.webupd8.org/2013/06/install-gimp-286-in-ubuntu-ppa.html).
+6. Run GIMP 2.8 so that it can initialize itself and the appropriate plug-in folder.
+7. Install plug-in.
+    - `cd $HOME/.gimp-2.8/plug-ins/`
+    - `git clone https://github.com/vietjtnguyen/gimp-image-labeling-toolbox.git`
+    - `ln -s gimp-image-labeling-toolbox/appdirs.py .`
+    - `ln -s gimp-image-labeling-toolbox/label-toolbox.py .`
+8. Close GIMP and reopen it.
+9. Create a new, blank image.
+10. Open the toolbox via the file menu `Toolbox > Labeling`.
 
 ### Windows
 

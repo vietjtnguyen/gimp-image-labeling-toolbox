@@ -450,24 +450,6 @@ class LabelToolbox(gtk.Window):
     container[-1].add(widget)
     container.append(widget)
 
-    # Adopted from <http://www.pygtk.org/pygtk2tutorial/examples/basictreeview.py>
-    widget = self.layer_list = gtk.TreeView()
-    widget.show()
-    self.layer_list_store = gtk.TreeStore(str, int)
-    self.layer_list.set_model(self.layer_list_store)
-    self.layer_list_column = gtk.TreeViewColumn('Layer')
-    self.layer_list.append_column(self.layer_list_column)
-    self.layer_list_cell_renderer = gtk.CellRendererText()
-    self.layer_list_column.pack_start(self.layer_list_cell_renderer)
-    self.layer_list_column.add_attribute(self.layer_list_cell_renderer, 'text', 0)
-    self.layer_list_column.set_clickable(False)
-    self.layer_list_selection = self.layer_list.get_selection()
-    self.layer_list_selection.set_mode(gtk.SELECTION_MULTIPLE)
-    self.layer_list.set_search_column(0)
-    self.layer_list.set_reorderable(False)
-    self.layer_list.set_rubber_banding(True)
-    container[-1].add(widget)
-
     widget = gtk.HBox(spacing=4, homogeneous=True)
     widget.show()
     container[-1].add(widget)
@@ -505,6 +487,24 @@ class LabelToolbox(gtk.Window):
     self.only_available_with_open_image.append(widget)
 
     container.pop()
+
+    # Adopted from <http://www.pygtk.org/pygtk2tutorial/examples/basictreeview.py>
+    widget = self.layer_list = gtk.TreeView()
+    widget.show()
+    self.layer_list_store = gtk.TreeStore(str, int)
+    self.layer_list.set_model(self.layer_list_store)
+    self.layer_list_column = gtk.TreeViewColumn('Layer')
+    self.layer_list.append_column(self.layer_list_column)
+    self.layer_list_cell_renderer = gtk.CellRendererText()
+    self.layer_list_column.pack_start(self.layer_list_cell_renderer)
+    self.layer_list_column.add_attribute(self.layer_list_cell_renderer, 'text', 0)
+    self.layer_list_column.set_clickable(False)
+    self.layer_list_selection = self.layer_list.get_selection()
+    self.layer_list_selection.set_mode(gtk.SELECTION_MULTIPLE)
+    self.layer_list.set_search_column(0)
+    self.layer_list.set_reorderable(False)
+    self.layer_list.set_rubber_banding(True)
+    container[-1].add(widget)
 
     container.pop()
 
@@ -699,7 +699,7 @@ class LabelToolbox(gtk.Window):
     container[-1].add(widget)
     container.append(widget)
 
-    widget = gtk.VBox(spacing=4, homogeneous=True)
+    widget = gtk.VBox(spacing=4, homogeneous=False)
     widget.show()
     container[-1].add(widget)
     container.append(widget)
@@ -717,7 +717,7 @@ class LabelToolbox(gtk.Window):
 
     container.pop()
 
-    widget = gtk.VBox(spacing=4, homogeneous=True)
+    widget = gtk.VBox(spacing=4, homogeneous=False)
     widget.show()
     container[-1].add(widget)
     container.append(widget)
@@ -742,7 +742,7 @@ class LabelToolbox(gtk.Window):
     container[-1].add(widget)
     container.append(widget)
 
-    widget = gtk.VBox(spacing=4, homogeneous=True)
+    widget = gtk.VBox(spacing=4, homogeneous=False)
     widget.show()
     container[-1].add(widget)
     container.append(widget)
@@ -760,7 +760,7 @@ class LabelToolbox(gtk.Window):
 
     container.pop()
 
-    widget = gtk.VBox(spacing=4, homogeneous=True)
+    widget = gtk.VBox(spacing=4, homogeneous=False)
     widget.show()
     container[-1].add(widget)
     container.append(widget)
@@ -1112,9 +1112,12 @@ class LabelToolbox(gtk.Window):
       if type(layer) == gimp.GroupLayer:
         logging.info('Skipping layer "%s" because it is a GroupLayer' % layer)
         continue
-      if not layer.name.startswith('Label'):
-        logging.info('Skipping layer "%s" because its name does not start with "Label"' % layer)
+      if layer.name == 'Original':
+        logging.info('Skipping layer original layer')
         continue
+      #if not layer.name.startswith('Label'):
+      #  logging.info('Skipping layer "%s" because its name does not start with "Label"' % layer)
+      #  continue
       logging.info('Saving layer "%s"' % layer)
       layer.resize_to_image_size()
       rgb_label_image = self.layerToRgbLabelImage(layer)
@@ -1430,15 +1433,15 @@ class LabelToolbox(gtk.Window):
     self.loadImageFromInternalPaths()
 
   def completionMatchSelected(self, completion, model, iterator):
-    logging.info('Label name completion selected')
+    logging.info('Label name completion selected: %s' % self.label_name.get_text())
     self.setForegroundColorFromLabelName()
 
   def labelNameActivated(self, widget):
-    logging.info('Label name completion selected')
+    logging.info('Label name completion selected: %s' % self.label_name.get_text())
     self.setForegroundColorFromLabelName()
 
   def selectLabelButtonClicked(self, widget):
-    logging.info('Button clicked')
+    logging.info('Button clicked, label: %s' % self.label_name.get_text())
     self.setForegroundColorFromLabelName()
 
   def shuffleColorsButtonClicked(self, widget):
