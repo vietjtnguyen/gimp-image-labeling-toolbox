@@ -1303,7 +1303,7 @@ class LabelToolbox(gtk.Window):
     tree_store, rows = self.layer_list_selection.get_selected_rows()
     for row in rows:
       layer_name, layer_id = tree_store[row]
-      if not layer_name.startswith('Label'):
+      if layer_name.startswith('Original'):
         self.layer_list_selection.unselect_path(row)
 
   def applyToSelectedLayers(self, f):
