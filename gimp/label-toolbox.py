@@ -1211,6 +1211,7 @@ class LabelToolbox(gtk.Window):
       with open(comment_filename, 'r') as f:
         self.comment.get_buffer().set_text(f.read())
     except IOError:
+      self.comment.get_buffer().set_text('')
       pass
   
   def resetInterface(self):
