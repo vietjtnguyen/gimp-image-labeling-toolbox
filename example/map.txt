@@ -1,0 +1,8 @@
+0: background
+1: bicycle
+2: building
+3: car
+4: post
+5: sidewalk
+6: signal_light
+7: street
