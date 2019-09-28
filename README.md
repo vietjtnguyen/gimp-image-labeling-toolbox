@@ -120,6 +120,19 @@ The `/label` folder contains the `.mat` array files that store the labels themse
 /path/to/label/2010_002080.mat
 ```
 
+### Example `map.txt`
+
+```
+0: background
+1: bicycle
+2: building
+3: car
+4: post
+5: sidewalk
+6: signal_light
+7: street
+```
+
 Workflow
 --------
 
