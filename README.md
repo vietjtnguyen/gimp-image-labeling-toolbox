@@ -60,10 +60,10 @@ The following instructions are "from memory" and should work but have not been t
 7. Install plug-in.
     - `cd $HOME/.gimp-2.8/plug-ins/`
     - `git clone https://github.com/vietjtnguyen/gimp-image-labeling-toolbox.git`
-    - `ln -s gimp-image-labeling-toolbox/appdirs.py .`
-    - `ln -s gimp-image-labeling-toolbox/label-toolbox.py .`
+    - `ln -s gimp-image-labeling-toolbox/gimp/appdirs.py .`
+    - `ln -s gimp-image-labeling-toolbox/gimp/label-toolbox.py .`
 8. Close GIMP and reopen it.
-9. Create a new, blank image.
+9. Create a new, blank image (size doesn't matter, an active image is required to open the toolbox).
 10. Open the toolbox via the file menu `Toolbox > Labeling`.
 
 ### Windows
@@ -90,7 +90,7 @@ The following instructions worked in my testing for Windows 7 64-bit and Windows
     - [label-toolbox.py](https://raw.githubusercontent.com/vietjtnguyen/gimp-image-labeling-toolbox/master/gimp/label-toolbox.py)
     - [appdirs.py](https://raw.githubusercontent.com/vietjtnguyen/gimp-image-labeling-toolbox/master/gimp/appdirs.py)
 8. Close GIMP and reopen it.
-9. Create a new, blank image.
+9. Create a new, blank image (size doesn't matter, an active image is required to open the toolbox).
 10. Open the toolbox via the file menu `Toolbox > Labeling`.
 
 What's going on here is GIMP 2.8 installs *its own Python binary*. As a result any dependencies (e.g. NumPy, SciPy) you install on your machine are available to the Python 2.7 you install (`C:\Python27` by default) but not immediately available to GIMP and the Python plug-ins it runs. What we do here is install Python 2.7 as an install target for our dependencies. The toolbox will then update its `sys.path` to look for the dependencies in the normally installed Python 2.7 (see [commit `c910e15dbb`](https://github.com/vietjtnguyen/gimp-image-labeling-toolbox/blob/7f8e68ae67546b09e87f2ccfd988338b2dfd93f3/gimp/label-toolbox.py#L27)). Since we match the Python binary that GIMP installs (v2.7, 32-bit) the dependencies will also work for the GIMP Python install.
@@ -102,12 +102,12 @@ Installation on Mac OS X still requires further testing. GIMP appears to also in
 Directory Structure
 -------------------
 
-When the toolbox opens an image, say at `/path/to/my-image.jpg`, it does four things (see `openImageButtonClicked`):
+When the toolbox opens an image, say at `/path/to/image/my-image.jpg`, it does four things (see `openImageButtonClicked`):
 
-1. Loads the label name to label integer mapping file (see `loadMetaData`). It looks for this file at `/path/to/../map.txt`.
+1. Loads the label name to label integer mapping file (see `loadMetaData`). It looks for this file at `/path/to/image/../map.txt`.
 2. Loads the original image (see `loadImage`). This is the image that is opened so the toolbox already knows where it is.
-3. Loads the label `.mat` file (see `loadLabelMat`). The toolbox looks for this at `/path/to/../label/my-image.mat`.
-4. Loads the comment associated with the image (see `loadComment`). The toolbox finds this file at `/path/to/../comment/my-image.txt`.
+3. Loads the label `.mat` file (see `loadLabelMat`). The toolbox looks for this at `/path/to/image/../label/my-image.mat`.
+4. Loads the comment associated with the image (see `loadComment`). The toolbox finds this file at `/path/to/image/../comment/my-image.txt`.
 
 The `/label` folder contains the `.mat` array files that store the labels themselves. The `/comment` folder contains text files (simple UTF-8 text files) that have the per-image comments. A text file per-image is *optional*; the folder could be empty to begin with.
 
